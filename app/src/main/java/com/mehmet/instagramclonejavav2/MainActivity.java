@@ -12,6 +12,7 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.mehmet.instagramclonejavav2.databinding.ActivityMainBinding;
 
 public class MainActivity extends AppCompatActivity {
@@ -27,6 +28,15 @@ public class MainActivity extends AppCompatActivity {
         View view = binding.getRoot();
         setContentView(view);
         mAuth = FirebaseAuth.getInstance();
+
+        //eğer kullanıcı daha önce giriş yaptıysa ve çıkış yapmadıysa uygulama açıldığında girilen hesaptan devam etmesini nasıl sağlarız
+        FirebaseUser user = mAuth.getCurrentUser();
+        if (user != null){ //kullanıcı boş değil ise giriş yapmıştır demektir .
+            Intent intent = new Intent(MainActivity.this,FeedActivity.class);
+            startActivity(intent);
+            finish();
+
+        }
 
     }
 
