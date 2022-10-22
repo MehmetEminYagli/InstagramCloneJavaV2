@@ -26,12 +26,16 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.mehmet.instagramclonejavav2.databinding.ActivityUploadBinding;
 
+import java.util.HashMap;
 import java.util.UUID;
 
 public class UploadActivity extends AppCompatActivity {
@@ -95,6 +99,65 @@ public class UploadActivity extends AppCompatActivity {
                 public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                 //başarılı ise ne yapıcaz
                     //download url 'yi alıcaz sonra bu url'yi kullanarak başka kullanıcılarada göstericez
+                    //benzersiz ismide verdiğimize göre şimdi verilerin url 'sini alarak kullanıcalara göstericez
+                    //bunun için yine bir referance eklicez
+
+                    StorageReference newReference = firebaseStorage.getReference(UniqueimageName);
+                    //verinin ismini aldık şimfi url 'sini alıcaz
+                    newReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                        @Override
+                        public void onSuccess(Uri uri) {
+                            //BURAYA VERİ TABANINA KAYIT ETMEK İSTEDİĞİMİZ VERİLERİ YAZICAZ
+
+
+                            //bu listener da bize uri veriyor biz bu uri ile verileri göstericez yazıcaz
+                            //bundan sonrasında veriden almak istediklerimizi yazıyoruz
+                            //url sini Uri kullnarak string yapıyourz
+                            String DownloadUrl = uri.toString();
+
+                            //sonra yorumu alıyoruz
+                            String comment = binding.CommentText.getText().toString();
+
+                            //birde kullanıcının kendisini alıcaz göstericez
+                            FirebaseUser user = auth.getCurrentUser(); //ile kullanıcın adını aldık
+                            //birde emailini alalım
+                            String email = user.getEmail();
+
+                            //şimdi anahtar kelimeleri ve değerleri HASHMAP kullanarak firestore 'a kopyalayabileceğiz
+
+                                    //<anahtar kelime string olucak , değer herhangi bir şey olabilir>
+                            HashMap<String , Object> postData = new HashMap<>();
+                            postData.put("userEmail", email);
+                            postData.put("DownloadURL",DownloadUrl);
+                            postData.put("Comment" ,comment);
+                            //tarihi firebase 'i kullanarak alıcaz ve kayıt edicez FieldValue.serverTimestamp() kodu ile o anki server saatini alıcaz yani date'i alıcaz
+                            postData.put("Date", FieldValue.serverTimestamp());
+
+                            //hashmap ile anahtar kelimeleri ve değerleri birleştirdim şimdi firebase veri tabanına kayıt edicem
+                            firebaseFirestore.collection("Posts").add(postData).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                                @Override
+                                public void onSuccess(DocumentReference documentReference) {
+                                    //kayıt yapıldı ise post sayfasını kapatabiliriz yani bu sayfayı kapatıcaz anasayfaya geçicez
+
+                                    Intent intent = new Intent(UploadActivity.this,FeedActivity.class);
+                                    //flag ekliyoruz
+                                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP); //komutu ile herşeyi kapatıcak ki arka planda gereksiz yere çalışan bir sayfa olmasın
+                                    startActivity(intent);
+
+
+
+                                }
+                            }).addOnFailureListener(new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception e) {
+                                //başarısız ise bir toast göstericez
+                                    Toast.makeText(UploadActivity.this,e.getLocalizedMessage(),Toast.LENGTH_LONG).show();
+                                }
+                            });
+
+
+                        }
+                    });
 
 
                 }
