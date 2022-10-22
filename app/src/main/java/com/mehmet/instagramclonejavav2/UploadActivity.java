@@ -4,6 +4,7 @@ import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -21,13 +22,27 @@ import android.provider.MediaStore;
 import android.view.View;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 import com.mehmet.instagramclonejavav2.databinding.ActivityUploadBinding;
+
+import java.util.UUID;
 
 public class UploadActivity extends AppCompatActivity {
 
     private  ActivityUploadBinding binding;
-
+    private FirebaseStorage firebaseStorage;
+    private FirebaseAuth auth;
+    private FirebaseFirestore firebaseFirestore;
+    private StorageReference storageReference;
+    Uri imageData;
+    //Bitmap selectedBitmap;
     //launcher'ı kullanabilmek için önce burada çağırmamız lazım
     ActivityResultLauncher<Intent> activityResultLauncher; //neden intent diyoruz bu arkadaş galeriye gidip veri alma işini yaptığı için intent ile galeri sayfasını açıcaz
     //her olay için launcher oluştururuz
@@ -36,8 +51,7 @@ public class UploadActivity extends AppCompatActivity {
     //sonra bu launcher'ları initalieze etmemiz gerekiyor bunu unutmayalım ama bu olayın kodları biraz fazla olduğu için farklı bir method oluşturup orada
     //bu kodları yazalım sonra bu methodu oncreate altında çağıralım ki kod fazlalığı ve karmaşıklığı olmasın
 
-    Uri imageData;
-    //Bitmap selectedBitmap;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -48,10 +62,53 @@ public class UploadActivity extends AppCompatActivity {
 
         //registerlauncher'ı oncreate altında çağırmaz isek launcher'lar çalışmaz
         registerLauncher();
+        //storege'i initalieze edelim
+        firebaseStorage = FirebaseStorage.getInstance();
+        auth = FirebaseAuth.getInstance();
+        firebaseFirestore = FirebaseFirestore.getInstance();
+
+        // = oluşturduğumuz obje  firebaseStorage den çekicez verileri depodan yani onun için bunu Referance edicez
+        storageReference = firebaseStorage.getReference();
 
     }
 
     public void UploadButton(View view){
+
+        if (imageData != null){
+            //referans sistemi ile resimlerimizi kayıt edicez
+            //referans denilen şey nereye storage 'de nereye ne kayıt etmemizi trackini tutan yani sırasını tutan bir objedir
+            //bu objeniyi kullanabilmek için storagereferance 'i projeye eklememiz geerekiyor
+            //firebaseStorage'de klasör oluşturmak için --> storageReference.child() <-- komutunu kullanırız sonrasında --> .putFile(koyulacakdosya) ilede veriyi depoda o klasörün içine kayıt ederiz
+            // yine sonrasında nokta ile bir listener oluşturucaz başarılı ise şunu başarısız ise şunu yap dememiz gerekiyor
+            //hadi yapalım let's go
+            //resimleri yada verileri kayıt ederken onlara üniversal Unique bir isim vermemiz gerekiyor eğer aynı isimden birden fazla olursa en son kayıt edilen veri depoda durur öncekiler silinir
+            //bunun için her veriye unique isim vermemiz gerekiyor :D
+
+            //universal unique id
+            //javada zaten boyle bir sınıf varmış
+            UUID uuid = UUID.randomUUID(); //bu kod satırı bize uydurma ama benzersiz bir isim vericek
+            //sonrasında benzersiz ismi dataya eklememiz gerekiyor dicez ki böyle kaydet
+            String UniqueimageName = "images/"+ uuid +".jpg";
+
+            storageReference.child(UniqueimageName).putFile(imageData).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                @Override
+                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                //başarılı ise ne yapıcaz
+                    //download url 'yi alıcaz sonra bu url'yi kullanarak başka kullanıcılarada göstericez
+
+
+                }
+            }).addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    //resim yükleme başarısız ise toast mesajı gösterizcez
+                    Toast.makeText(UploadActivity.this,e.getLocalizedMessage(),Toast.LENGTH_LONG).show();
+                }
+            });
+
+
+        }
+
 
     }
     public  void  SelectImage(View view){
