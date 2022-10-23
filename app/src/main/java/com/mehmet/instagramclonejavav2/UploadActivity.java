@@ -174,6 +174,7 @@ public class UploadActivity extends AppCompatActivity {
 
 
     }
+
     public  void  SelectImage(View view){
 
         //izin varmı onu kontrol edicez resim seçme kısmında eğer izin var ise galeriye atıcak bizi eğer yok ise izin isticek bizden
@@ -208,6 +209,7 @@ public class UploadActivity extends AppCompatActivity {
             activityResultLauncher.launch(intentToGallery);
         }
     }
+
     private  void  registerLauncher(){
         activityResultLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult() ,  new ActivityResultCallback<ActivityResult>() {
             @Override
@@ -269,6 +271,4 @@ public class UploadActivity extends AppCompatActivity {
         }
     });
     }
-
-
 }
